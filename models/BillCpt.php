@@ -20,6 +20,7 @@ use Yii;
  *
  * @property CustomCpt $cpt
  * @property VisitBilling $visitBill
+ * @property BillingPostCpt[] $billingPostCpts
  */
 class BillCpt extends \yii\db\ActiveRecord
 {
@@ -84,5 +85,15 @@ class BillCpt extends \yii\db\ActiveRecord
     public function getVisitBill()
     {
         return $this->hasOne(VisitBilling::className(), ['id' => 'visit_bill_id']);
+    }
+
+    /**
+     * Gets query for [[BillingPostCpts]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getBillingPostCpts()
+    {
+        return $this->hasMany(BillingPostCpt::className(), ['visit_cpt_id' => 'id']);
     }
 }

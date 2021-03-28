@@ -13,6 +13,7 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
 	'modules' => [
+        'gridview' => ['class' => 'kartik\grid\Module'],
         'api' => [
             'class' => 'app\modules\api\Api',
         ],

@@ -168,6 +168,28 @@ if (Yii::$app->controller->action->id != "patient") {
         </div>
         <div class="col-md-3" style="padding-top: 15px;">
             <div id="calendar"></div>
+
+            <div style="margin-top: 10px;">
+                <table class="table table-bordered table-condensed table-hover">
+                    <thead>
+                        <tr>
+                            <th>Doctor Name</th><th>Visists Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    foreach ($doctorVisitCount as $doctorName=>$visitsCount){
+                        ?>
+                        <tr>
+                            <td><?=$doctorName?></td>
+                            <td><?=$visitsCount?></td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

@@ -20,6 +20,7 @@ use Yii;
  * @property string $federal_tax_id
  * @property string $npi
  *
+ * @property BillingPost[] $billingPosts
  * @property OrganizationInsurance[] $organizationInsurances
  * @property OrganizationLocation[] $organizationLocations
  * @property Template[] $templates
@@ -67,6 +68,16 @@ class Organization extends \yii\db\ActiveRecord
             'federal_tax_id' => 'Federal Tax ID',
             'npi' => 'Npi',
         ];
+    }
+
+    /**
+     * Gets query for [[BillingPosts]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getBillingPosts()
+    {
+        return $this->hasMany(BillingPost::className(), ['organization_id' => 'id']);
     }
 
     /**

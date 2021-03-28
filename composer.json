@@ -24,7 +24,13 @@
         "thamtech/yii2-uuid": "*",
         "mikehaertl/php-pdftk": "dev-master",
         "kartik-v/yii2-mpdf": "dev-master",
-        "nex/yii2-datepicker": "*"
+        "nex/yii2-datepicker": "*",
+        "kartik-v/yii2-grid": "dev-master",
+        "kartik-v/yii2-editable": "@dev",
+        "kartik-v/yii2-widget-touchspin": "dev-master",
+        "kartik-v/yii2-money": "@dev",
+        "onmotion/yii2-widget-apexcharts": "dev-master"
+
 
     },
     "require-dev": {

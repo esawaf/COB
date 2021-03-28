@@ -72,6 +72,8 @@ AppAsset::register($this);
                     $navItems[] = ['label' => 'ICD10', 'url' => ['/custom-icd10/index']];
                     $navItems[] = ['label' => 'CPT', 'url' => ['/cpt/index']];
                     $navItems[] = ['label' => 'Inbox', 'url' => ['/inbox/index']];
+                    $navItems[] = ['label' => 'Reports', 'url' => ['/report/index']];
+                    $navItems[] = ['label' => 'Billing Post', 'url' => ['/billing-post/index']];
                 } else if (Yii::$app->user->identity->type == "Pharmacy") {
                     $navItems[] = ['label' => 'Locations Management', 'url' => ['/pharmacy/locations']];
                     $navItems[] = ['label' => 'Pharmaciests', 'url' => ['/pharmaciest/index']];

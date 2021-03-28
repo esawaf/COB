@@ -18,6 +18,7 @@ use Yii;
  * @property int $send_to_insurance
  * @property int $review
  *
+ * @property BillingPostCpt[] $billingPostCpts
  * @property InboxThread[] $inboxThreads
  * @property Login $doctor
  * @property OrganizationLocation $location
@@ -68,6 +69,16 @@ class Visit extends \yii\db\ActiveRecord
             'send_to_insurance' => 'Send To Insurance',
             'review' => 'Review',
         ];
+    }
+
+    /**
+     * Gets query for [[BillingPostCpts]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getBillingPostCpts()
+    {
+        return $this->hasMany(BillingPostCpt::className(), ['visit_id' => 'id']);
     }
 
     /**

@@ -2,7 +2,9 @@
 
 namespace app\controllers;
 
+use app\models\BillingPostCpt;
 use app\models\CustomCpt;
+use app\models\Login;
 use app\models\Organization;
 use app\models\Template;
 use app\models\VisitReportData;
@@ -60,6 +62,7 @@ class VisitController extends Controller
         }
         $query = Visit::find();
         $insurancePendingPaymentCount = 0;
+
         if (Yii::$app->user->identity->type == "Insurance Profile") {
 
             $query = Visit::find()->leftJoin("patient", "patient.id=visit.patient_id")->where(['patient.insurance_id' => Yii::$app->user->identity->insurance_id]);
@@ -77,25 +80,41 @@ class VisitController extends Controller
         $selectedLocation = Yii::$app->user->identity->selected_location;
         $count = 0;
         $pendingReviewCount = 0;
+
         if (Yii::$app->user->identity->type != "Insurance Profile") {
             $query->andFilterWhere(['location_id' => $selectedLocation]);
             $count = Visit::find()->where(['location_id' => $selectedLocation])->andWhere(["status" => \app\models\VisitStatus::CHECKED_IN])->count();
             $pendingReviewCount = Visit::find()->where(['location_id' => $selectedLocation])->andWhere(["review" => "1"])->count();
+
         }
+//        $doctors = Login::find()->where(['type'=>'Doctor'])->all();
+        $doctors = Login::find()->leftJoin("login_location", 'login_location.login_id=login.id')->where(["login.type" => "Doctor", 'login_location.location_id' => $selectedLocation])->all();
 
 
+        $doctorVisitCount = array();
         if (isset(Yii::$app->request->get()['date'])) {
             $date = Yii::$app->request->get()['date'];
             $startDate = $date . " 00:00:00";
             $endDate = $date . " 23:59:59";
             $query->andWhere(['between', 'visit_date', $startDate, $endDate]);
+//            echo "<pre>";
+//            var_dump($doctors);
+//            echo "</pre>";
+            foreach ($doctors as $doctor){
+//                echo "<pre>";
+//                var_dump($doctor->id);
+//                echo "</pre>";
+                $doctorVisitCount[$doctor->name]=Visit::find()->where(['doctor_id'=>$doctor->id])->andWhere(['between', 'visit_date', $startDate, $endDate])->count();
+            }
         } else {
             $date = date('Y-m-d');
             $startDate = $date . " 00:00:00";
             $endDate = $date . " 23:59:59";
             $query->andWhere(['between', 'visit_date', $startDate, $endDate]);
+            foreach ($doctors as $doctor){
+                $doctorVisitCount[$doctor->name]=Visit::find()->where(['doctor_id'=>$doctor->id])->andWhere(['between', 'visit_date', $startDate, $endDate])->count();
+            }
         }
-
         $dataProvider->sort->attributes['patient.name'] = [
             'asc' => ['patient.name' => SORT_ASC],
             'desc' => ['patient.name' => SORT_DESC],
@@ -112,6 +131,7 @@ class VisitController extends Controller
             'incompleteCount' => $count,
             'reviewCount' => $pendingReviewCount,
             'insurancePendingPaymentCount' => $insurancePendingPaymentCount,
+            'doctorVisitCount'=>$doctorVisitCount,
         ]);
     }
 
@@ -197,6 +217,7 @@ class VisitController extends Controller
             ->andWhere(['send_to_insurance' => 1])
             ->andWhere(['review' => 0])
             ->andWhere(['status' => 'Compleled'])
+
             ->andWhere(['insurance_payment_status' => 'Pending'])
             ->count();
 
@@ -642,11 +663,14 @@ class VisitController extends Controller
             $relatedIcd10CodesArr = explode(",", $relatedIcd10Codes);
             $relatedIcd10CodesStr = "";
             foreach ($relatedIcd10CodesArr as $relatedIcd10Code) {
-                $relatedIcd10CodesStr .= $icd10BoxMap[$relatedIcd10Code - 1];
+                if($relatedIcd10Code!=null && $relatedIcd10Code!="" && is_numeric($relatedIcd10Code)){
+                    $relatedIcd10CodesStr .= $icd10BoxMap[$relatedIcd10Code-1];
+                }
             }
 
             $formData["BOX24_" . $i . "_FROM_MM"] = $visitMonth;
-            $formData["BOX24_" . $i . "_FROM_DD"] = $visitDay;
+            $formData["BOX24_" . $i . "
+            "] = $visitDay;
             $formData["BOX24_" . $i . "_FROM_YY"] = $visitYear;
             $formData["BOX24_" . $i . "_TO_MM"] = $visitMonth;
             $formData["BOX24_" . $i . "_TO_DD"] = $visitDay;
@@ -864,9 +888,10 @@ class VisitController extends Controller
         $model = new Visit();
 
         if ($model->load(Yii::$app->request->post())) {
-
+//    var_dump(Yii::$app->request->post());
+//    exit();
             if ($model->visit_date != null && $model->visit_date != "") {
-                $dt = \DateTime::createFromFormat('m-d-Y G:i', $model->visit_date)->format('Y-m-d H:i:s');
+                $dt = \DateTime::createFromFormat('m/d/Y G:i', $model->visit_date)->format('Y-m-d H:i:s');
                 $model->visit_date = $dt;
 
             }
@@ -1077,7 +1102,9 @@ class VisitController extends Controller
         $visitBilling->cost = $billTotalRate;
         $visitBilling->insurance_charge = 0;
         $visitBilling->patient_charge = 0;
+
         if ($visitBilling->save()) {
+            BillingPostCpt::deleteAll(["visit_id"=>$id]);
             for ($i = 0; $i < count($cptIds); $i++) {
                 $billCpt = new BillCpt();
                 $billCpt->visit_bill_id = $visitBilling->id;
@@ -1090,6 +1117,15 @@ class VisitController extends Controller
                 $billCpt->identifier3 = $modifiers3[$i];
                 $billCpt->identifier4 = $modifiers4[$i];
                 $billCpt->save();
+                $billingPostCpt = new BillingPostCpt();
+                $billingPostCpt->adjustment=0;
+                $billingPostCpt->balance=0;
+                $billingPostCpt->visit_id = $id;
+                $billingPostCpt->visit_cpt_id = $billCpt->id;
+                $billingPostCpt->charged=0;
+                $billingPostCpt->payment=0;
+                $billingPostCpt->session_action = "Pending";
+                $billingPostCpt->save();
             }
         }
 

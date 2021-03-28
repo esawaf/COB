@@ -42,7 +42,7 @@ if($model->visit_date==null){
                 'value' => $visitDate,
                 'pluginOptions' => [
                     'autoclose' => true,
-                    'format' => 'm/d/yyyy HH:i',
+                    'format' => 'M/d/yyyy HH:i',
                     'startDate' => '01-Mar-2014 12:00 AM',
                     'todayHighlight' => true
                 ]

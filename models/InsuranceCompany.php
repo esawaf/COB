@@ -21,6 +21,7 @@ use Yii;
  * @property string $contact_person_email
  * @property int $accounts_number
  *
+ * @property BillingPost[] $billingPosts
  * @property InsurancePlan[] $insurancePlans
  * @property Login[] $logins
  * @property OrganizationInsurance[] $organizationInsurances
@@ -71,6 +72,16 @@ class InsuranceCompany extends \yii\db\ActiveRecord
             'contact_person_email' => 'Contact Person Email',
             'accounts_number' => 'Accounts Number',
         ];
+    }
+
+    /**
+     * Gets query for [[BillingPosts]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getBillingPosts()
+    {
+        return $this->hasMany(BillingPost::className(), ['insurance_id' => 'id']);
     }
 
     /**
